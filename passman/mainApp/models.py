@@ -18,7 +18,6 @@ class PasswordManager(models.Model):
 
     def save(self,*args,**kwargs):
         if(self._state.adding):
-            self.key=hashlib.sha512(self.key.encode()).hexdigest()
             self.salt=Fernet.generate_key().decode()
         super(PasswordManager,self).save(*args,**kwargs)
 
@@ -31,38 +30,35 @@ class Password(models.Model):
     manager=models.ForeignKey(PasswordManager,on_delete=models.CASCADE)
     changingPass=models.BooleanField(null=True,default=False)
 
-    def readPass(self,key):
-        fernet=Fernet(get_actual_key(key,self.manager.salt.encode()))
-        return fernet.decrypt(self.password.encode()).decode()
-        
 
 
-    def save(self,key='shax',changedPass=False,*args,**kwargs):
 
-        if(self.changingPass):
-            self.changingPass=False
-            changedPass=True
+    # def save(self,key='shax',changedPass=False,*args,**kwargs):
 
-        if(not self._state.adding and  hashlib.sha512(key.encode()).hexdigest()!=self.manager.key):
-            raise Exception('wrong key')
+    #     if(self.changingPass):
+    #         self.changingPass=False
+    #         changedPass=True
 
-        if(self._state.adding or changedPass):
-            salt=self.manager.salt.encode()
-            actualkey=get_actual_key(key,salt)
-            print(actualkey)
-            fernet=Fernet(actualkey)
-            new_var = fernet.encrypt(self.password.encode()).decode()
-            self.password=new_var
+    #     if(not self._state.adding and  hashlib.sha512(key.encode()).hexdigest()!=self.manager.key):
+    #         raise Exception('wrong key')
+
+    #     if(self._state.adding or changedPass):
+    #         salt=self.manager.salt.encode()
+    #         actualkey=get_actual_key(key,salt)
+    #         print(actualkey)
+    #         fernet=Fernet(actualkey)
+    #         new_var = fernet.encrypt(self.password.encode()).decode()
+    #         self.password=new_var
             
-        super(Password,self).save(*args,**kwargs)
+    #     super(Password,self).save(*args,**kwargs)
 
     def __str__(self) :
         return f'{self.manager} for {self.website} as {self.username}'
 
 
 
-def get_actual_key(key,salt):
-    salt=base64.urlsafe_b64decode(salt)
-    key=key.encode()
-    return base64.urlsafe_b64encode((salt+key)[len(key):])
+# def get_actual_key(key,salt):
+#     salt=base64.urlsafe_b64decode(salt)
+#     key=key.encode()
+#     return base64.urlsafe_b64encode((salt+key)[len(key):])
     
